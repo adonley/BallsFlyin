@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<script src="js/three.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<div id="container">
+	</div>
+	<script>
+		var WIDTH, HEIGHT;
+		var VIEW_ANGLE;
+		var scene, renderer, camera;
+		var sphereMaterial;
+		var radius = 3,
+    		segments = 10,
+    		rings = 10
+    		space_const = 10;
+    	var length = 20;
+		var pointLight = new THREE.PointLight(0xFFFFFF);
+		var container = $('#container');
+		var spheres;
+
+		$( window ).resize(function() 
+		{
+			setWindowParams();
+		});
+
+		function Sphere(mesh) 
+		{
+
+    		this.mesh = mesh;
+    		this.xdir = Math.random() * 3 * Math.pow(-1, Math.round(Math.random()));
+    		this.ydir = Math.random() * 3 * Math.pow(-1, Math.round(Math.random()));
+
+    		this.setPos = function(x, y, z)
+    		{
+    			mesh.position.set(x,y,z);
+    		}
+
+    		this.move = function() 
+    		{
+    			if(Math.ceil(WIDTH/5) <= (this.mesh.position.x + this.xdir) || (-Math.floor(WIDTH/5)) >= (this.mesh.position.x + this.xdir))
+    				this.xdir *= -1;
+
+    			if(Math.ceil(HEIGHT/5) <= (this.mesh.position.y + this.ydir) || (-Math.ceil(HEIGHT/5)) >= (this.mesh.position.y + this.ydir))
+    				this.ydir *= -1;
+
+        		this.mesh.translateX(this.xdir);
+        		this.mesh.translateY(this.ydir);
+    		};
+		}
+
+		function create2DArraySpheres()
+		{
+			var arr = new Array(length);
+  			for(var i = 0; i < length; i++) 
+  			{
+    			arr[i] = new Array(length);
+  			}
+
+  			var start = -(Math.floor(length/2));
+
+  			for(var i = 0; i < length; i++)
+  				for(var j = 0; j < length; j++)
+  				{
+  					arr[i][j] = new Sphere(new THREE.Mesh(
+						new THREE.SphereGeometry(
+							radius,
+							segments,
+							rings),
+							sphereMaterial));
+
+   				  	arr[i][j].setPos((start+i)*space_const, (start+j)*space_const, 0);
+
+  					scene.add(arr[i][j].mesh);
+  				}
+
+  			return arr;
+		}
+
+		function moveShapes() 
+		{
+			for(var i = 0; i < length; i++)
+  				for(var j = 0; j < length; j++)
+  				{
+  					spheres[i][j].move();
+  				}
+
+  			renderer.render(scene, camera);
+		}
+
+		function setWindowParams()
+		{
+			WIDTH = $(document).width(), HEIGHT = $(document).height();
+  			VIEW_ANGLE = 45,
+  				ASPECT = WIDTH / HEIGHT,
+  				NEAR = 0.1,
+  				FAR = 10000;
+
+  			camera =
+  				new THREE.PerspectiveCamera(
+    				VIEW_ANGLE,
+    				ASPECT,
+    				NEAR,
+    				FAR);
+
+  			// the camera starts at 0,0,0
+			// so pull it back
+			camera.position.z = 300;
+
+  			// add the camera to the scene
+			scene.add(camera);
+
+			// start the renderer
+			renderer.setSize(WIDTH, HEIGHT);
+
+			renderer.render(scene, camera);
+		}
+
+		function init() 
+		{
+			// create a WebGL renderer, camera
+			// and a scene
+			renderer = new THREE.WebGLRenderer();
+			scene = new THREE.Scene();
+			sphereMaterial =
+				new THREE.MeshLambertMaterial(
+				{
+					color: 0xFFFFFF
+				});
+
+			setWindowParams();
+
+			pointLight.position.set(10, 50, 130);
+
+			scene.add(pointLight);
+
+			spheres = create2DArraySpheres();
+
+			// attach the render-supplied DOM element
+			container.append(renderer.domElement);
+		}
+
+		init();
+
+		renderer.render(scene, camera);
+
+		setInterval(function() 
+			{
+				moveShapes();
+			}, 10);
+
+	</script>
+
+</body>
+</html>
